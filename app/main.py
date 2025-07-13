@@ -1,21 +1,20 @@
-# app/main.py
-from github import Github
-import requests, os
+from fastapi import FastAPI, Request
+import requests
 
-# GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-# REPO = "your-user/ai-pr-bot"
+app = FastAPI()
 
-# g = Github(GITHUB_TOKEN)
-# repo = g.get_repo(REPO)
-# issues = repo.get_issues(state="open")
+@app.get("/")
+def read_root():
+    # Check if LLM server is available
+    try:
+        response = requests.get("http://llm-server:11434/ping")
+        return {"llm_response": response.json()}
+    except Exception as e:
+        return {"error": str(e)}
 
-# for issue in issues:
-#     prompt = f"Create a code patch based on the following issue:\n\n{issue.title}\n{issue.body}"
-#     res = requests.post("http://llm-server:11434/generate", json={"prompt": prompt})
-#     patch = res.json().get("response")
-
-#     # Simulate writing patch to file (replace with real logic)
-#     with open("/tmp/generated_patch.py", "w") as f:
-#         f.write(patch)
-
-#     # You could now commit this patch, push a branch, and create PR using GitHub API or GitPython
+@app.post("/chat")
+async def chat(req: Request):
+    data = await req.json()
+    prompt = data.get("prompt", "")
+    resp = requests.post("http://llm-server:11434/generate", json={"prompt": prompt})
+    return resp.json()

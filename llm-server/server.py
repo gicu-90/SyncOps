@@ -1,19 +1,19 @@
 from fastapi import FastAPI, Request
 from llama_cpp import Llama
 
+MODEL_PATH = "/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"  # from mounted volume
+
+llm = Llama(model_path=MODEL_PATH, n_ctx=512)
+
 app = FastAPI()
 
-MODEL_PATH = "./models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
-
-llm = Llama(
-    model_path=MODEL_PATH,
-    n_ctx=512,
-    n_threads=4
-)
+@app.get("/ping")
+def ping():
+    return {"status": "LLM server is alive!"}
 
 @app.post("/generate")
-async def generate(request: Request):
-    data = await request.json()
+async def generate(req: Request):
+    data = await req.json()
     prompt = data.get("prompt", "")
-    output = llm(prompt, max_tokens=100)
-    return {"response": output["choices"][0]["text"]}
+    result = llm(prompt, max_tokens=128)
+    return {"response": result["choices"][0]["text"]}

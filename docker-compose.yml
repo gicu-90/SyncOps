@@ -1,15 +1,18 @@
-version: "3.8"
 services:
   llm-server:
     build: ./llm-server
     ports:
       - "11434:11434"
     volumes:
-      - ./llm-server/models:/app/models  # Mount local models folder inside container
+      - ./llm-server:/app
+      - ./models:/models
 
   app:
     build: ./app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app
+      - ./models:/models
     depends_on:
       - llm-server
-    environment:
-      - GITHUB_TOKEN=your_token_here
