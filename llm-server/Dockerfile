@@ -4,6 +4,6 @@ WORKDIR /app
 COPY server.py /app/server.py
 
 RUN apt-get update && apt-get install -y cmake build-essential && \
-    pip install llama-cpp-python fastapi uvicorn
+    pip install torch transformers accelerate sentencepiece fastapi uvicorn
 
 CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "11434", "--reload"]

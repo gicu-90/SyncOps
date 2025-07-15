@@ -6,6 +6,9 @@ services:
     volumes:
       - ./llm-server:/app
       - ./models:/models
+    environment:
+      - TRANSFORMERS_CACHE=/models/pretrained
+      - HF_HOME=/models
 
   app:
     build: ./app
