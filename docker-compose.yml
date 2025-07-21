@@ -6,9 +6,12 @@ services:
     volumes:
       - ./llm-server:/app
       - ./models:/models
+      - ./models/pretrained:/root/.cache/huggingface/transformers
+      - ./models/datasets:/root/.cache/huggingface/datasets
     environment:
       - TRANSFORMERS_CACHE=/models/pretrained
       - HF_HOME=/models
+      - HF_DATASETS_CACHE=/models/datasets
 
   app:
     build: ./app

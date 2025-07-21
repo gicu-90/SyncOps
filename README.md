@@ -1,19 +1,72 @@
-# 🧠 SyncOps: FastAPI-Powered LLM Inference Server
+# 🔁 SyncOps — AI-Powered API Gateway with LoRA Fine-Tuned LLM
 
-This project provides a minimal LLM API server using **FastAPI** and **[llama-cpp-python](https://github.com/abetlen/llama-cpp-python)**.
-It wraps a local quantized GGUF model (TinyLlama 1.1B) and serves it over HTTP with a `/generate` endpoint.
+SyncOps is a modular microservice system that connects a FastAPI-based app with a LoRA fine-tuned TinyLlama model server. Everything runs in Docker, and setup is one command away.
 
-To run this, you need to manually download the TinyLlama model from Hugging Face:
-sudo wget --header="Authorization: Bearer YOUR_TOKEN" https://huggingface.co/TinyLlama/TinyLlama-1.1B-Chat-v1.0/resolve/main/model.safetensors
-or the gguf: sudo wget --header="Authorization: Bearer YOUR_TOKEN" \
-    https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+---
 
-After downloading, place it here: SyncOps/models/tinyllama-1.1b-...
+## 📦 What's Inside
 
-Promt example:
+### `app/`
+A FastAPI service acting as the API gateway. It:
+- Serves an `/` health check that pings the LLM server
+- Accepts prompts via `/chat` and forwards them to the LLM server
+
+### `llm-server/`
+A FastAPI-based server hosting:
+- A pre-trained TinyLlama model (via Hugging Face)
+- A fine-tuning script (`finetune.py`) using PEFT + LoRA
+- Endpoints to ping or generate completions
+
+### `models/`
+Volume-mounted storage for:
+- Pretrained models
+- Finetuned adapters
+- Datasets for training
+
+---
+
+## 🚀 Quickstart
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/gicu-90/SyncOps.git
+cd SyncOps
 ```
+
+### 2. Install Docker (if not installed)
+
+Run the following command to install the latest Docker on Ubuntu:
+
+```bash
+curl -fsSL https://get.docker.com | sh
+```
+
+You may need to log out and log back in or run Docker commands with `sudo`.
+
+### 3. Build and run containers with Docker Compose CLI
+
+```bash
+docker compose up --build
+```
+
+This will build and start the app and LLM server containers.
+
+---
+
+## 🧠 How It Works
+
+- The app (`app/main.py`) exposes `/chat`, forwarding prompts to the LLM server. 
+- The LLM server (`llm-server/server.py`) loads TinyLlama from local cache and runs text generation.
+- The `finetune.py` script lets you fine-tune TinyLlama with LoRA on custom or HF datasets.
+
+---
+
+## 🧪 Example Usage
+
+```bash
 curl -X POST http://localhost:8000/chat   -H "Content-Type: application/json"   -d '{
-  "prompt": "<|system|>\nYou are a helpful assistant.\n<|user|>\nWrite a Python function that adds two numbers.\n<|assistant|>",
+  "prompt": "<|system|>\nYou are a helpful assistant.\n<|user|>\n Say something in french.\n<|assistant|>",
   "temperature": 0.7,
   "top_p": 0.9,
   "repeat_penalty": 1.1,
@@ -21,9 +74,47 @@ curl -X POST http://localhost:8000/chat   -H "Content-Type: application/json"   
 }'
 ```
 
-| Container     | Purpose                                               |
-| ------------- | ----------------------------------------------------- |
-| `app/`        | FastAPI app, orchestrates prompts and agents          |
-| `llm-server/` | Loads base model + LoRA adapters, responds to prompts |
-| `tuner/`      | Fine-tunes LoRA adapters from datasets                |
-| Shared Volume | `/models/` for storing & loading LoRA adapters        |
+---
+
+## 🔧 Fine-Tuning
+
+To fine-tune the model:
+
+```bash
+docker exec -it <llm-container-name> python /app/finetune.py
+```
+
+Fine-tuned models will be saved to `/models/finetuned`.
+
+---
+
+## 📁 Project Structure
+
+```text
+.
+├── app/                  # API gateway (FastAPI)
+├── llm-server/           # TinyLlama model server + fine-tuning
+├── models/               # Pretrained + fine-tuned models, datasets
+├── docker-compose.yml    # Service orchestration
+└── README.md             # You are here
+```
+
+---
+
+## 🤝 Contributing
+
+PRs are welcome! If you’d like to add agents, adapters, or more features, feel free to fork and contribute.
+
+---
+
+## 📜 License
+
+MIT License — use, modify, or deploy freely.
+
+---
+
+## 🧠 Credits
+
+- [TinyLlama](https://huggingface.co/TinyLlama) for the base model
+- Hugging Face Transformers + Datasets
+- PEFT & LoRA for efficient fine-tuning
